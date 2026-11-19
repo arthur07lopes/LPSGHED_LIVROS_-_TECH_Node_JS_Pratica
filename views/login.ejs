@@ -1,1 +1,32 @@
 
+<%- include('partials/cabecalho') %>
+
+<section class="painel painel-form" aria-labelledby="titulo-pagina">
+  <p class="bits" aria-hidden="true">01001100 01001111 01000111</p>
+  <h1 id="titulo-pagina" class="titulo-pixel">Entrar</h1>
+  <p>Use o e-mail e a senha que você cadastrou.</p>
+
+  <% if (erros.length > 0) { %>
+    <div id="resumo-erros" class="aviso aviso-erro" role="alert" tabindex="-1" data-foco>
+      <h2>Não foi possível entrar</h2>
+      <ul>
+        <% erros.forEach((e) => { %>
+          <li><a href="#<%= e.campo %>"><%= e.texto %></a></li>
+        <% }) %>
+      </ul>
+    </div>
+  <% } %>
+
+  <form class="formulario" action="/api/login" method="post" novalidate>
+    <%- include('partials/campo', { id: 'email', rotulo: 'E-mail', tipo: 'email',
+         autocomplete: 'username', dica: '', valor: valores.email || '', erros: [] }) %>
+    <%- include('partials/campo', { id: 'senha', rotulo: 'Senha', tipo: 'password',
+         autocomplete: 'current-password', dica: '', valor: '', erros: [] }) %>
+
+    <button class="botao botao-principal" type="submit">Entrar</button>
+  </form>
+
+  <p class="troca">Ainda não tem conta? <a href="/cadastro">Crie a sua</a>.</p>
+</section>
+
+<%- include('partials/rodape') %>

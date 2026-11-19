@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= titulo %> | LPS Livros Tech</title>
+  <!-- Fontes importadas da internet (Google Fonts) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Press+Start+2P&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/estilo.css">
+  <script src="/js/foco.js" defer></script>
+</head>
+<body>
+  <a class="pular" href="#conteudo">Pular para o conteúdo principal</a>
+
+  <header class="topo">
+    <div class="topo-linha">
+      <a class="logo" href="/">
+        <span class="logo-simbolo" aria-hidden="true">&lt;/&gt;</span>
+        LPS Livros Tech
+      </a>
+
+      <% if (usuario) { %>
+        <form class="busca" action="/" method="get" role="search">
+          <label class="so-leitor" for="busca">Buscar livros por título ou autor</label>
+          <input id="busca" name="busca" type="search" placeholder="Buscar por título ou autor" value="<%= busca %>">
+          <button class="botao botao-busca" type="submit">Buscar</button>
+        </form>
+
+        <div class="conta">
+          <p class="saudacao">Olá, <%= usuario.nome %></p>
+          <form action="/sair" method="post">
+            <button class="botao botao-leve" type="submit">Sair</button>
+          </form>
+        </div>
+      <% } else { %>
+        <nav class="conta" aria-label="Conta">
+          <a class="link-conta" href="/login" <%- pagina === 'login' ? 'aria-current="page"' : '' %>>Entrar</a>
+          <a class="link-conta" href="/cadastro" <%- pagina === 'cadastro' ? 'aria-current="page"' : '' %>>Criar conta</a>
+        </nav>
+      <% } %>
+    </div>
+
+    <% if (usuario) { %>
+      <nav class="faixa" aria-label="Filtrar por nível">
+        <ul>
+          <li><a href="/" <%- (pagina === 'inicio' && nivel === '') ? 'aria-current="page"' : '' %>>Todos os níveis</a></li>
+          <li><a href="/?nivel=Iniciante" <%- nivel === 'Iniciante' ? 'aria-current="page"' : '' %>>Iniciante</a></li>
+          <li><a href="/?nivel=Intermedi%C3%A1rio" <%- nivel === 'Intermediário' ? 'aria-current="page"' : '' %>>Intermediário</a></li>
+          <li><a href="/?nivel=Avan%C3%A7ado" <%- nivel === 'Avançado' ? 'aria-current="page"' : '' %>>Avançado</a></li>
+        </ul>
+      </nav>
+    <% } %>
+  </header>
+
+  <main id="conteudo" tabindex="-1">
+    <% if (mensagem) { %>
+      <div id="mensagem" class="aviso aviso-<%= mensagem.tipo %>"
+           role="<%= mensagem.tipo === 'erro' ? 'alert' : 'status' %>" tabindex="-1" data-foco>
+        <p><%= mensagem.texto %></p>
+      </div>
+    <% } %>

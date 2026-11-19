@@ -1,0 +1,312 @@
+/* estilo.css
+   Tema: preto profundo + ciano neon (linha gamer premium),
+   fonte de pixels nos títulos (bits), vitrine de produtos e faixa de
+   filtros (loja online) e cartões por nível (cursos). */
+
+/* ---------- 1. Cores e medidas ---------- */
+:root {
+  --fundo: #070a10;
+  --superficie: #101622;
+  --superficie-2: #172033;
+  --linha: #6f86ad;
+  --texto: #eaf2ff;
+  --texto-suave: #a9bad3;
+  --neon: #1de9d6;
+  --laranja: #ff9900;
+  --foco: #ffe45c;
+  --verde: #4be08a;
+  --ambar: #ffc247;
+  --rosa: #ff6b9d;
+  --erro-fundo: #2c101b;
+  --erro-borda: #ff5c7c;
+  --ok-fundo: #0d2a1d;
+  --fonte-pixel: 'Press Start 2P', 'Courier New', monospace;
+  --fonte-ui: 'Rajdhani', 'Segoe UI', Arial, sans-serif;
+  --fonte-texto: 'Inter', 'Segoe UI', Arial, sans-serif;
+}
+
+/* ---------- 2. Base ---------- */
+* { box-sizing: border-box; }
+html { font-size: 112.5%; }
+body {
+  margin: 0;
+  background-color: var(--fundo);
+  background-image:
+    linear-gradient(rgba(29, 233, 214, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(29, 233, 214, 0.05) 1px, transparent 1px);
+  background-size: 32px 32px;
+  color: var(--texto);
+  font-family: var(--fonte-texto);
+  line-height: 1.6;
+}
+a { color: var(--neon); }
+a:hover { color: #ffffff; }
+:focus-visible { outline: 3px solid var(--foco); outline-offset: 3px; }
+.so-leitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.pular {
+  position: absolute;
+  left: 0.5rem;
+  top: -4rem;
+  z-index: 10;
+  padding: 0.6rem 1rem;
+  background: var(--foco);
+  color: #000;
+  font-weight: 700;
+}
+.pular:focus { top: 0.5rem; }
+
+/* ---------- 3. Topo ---------- */
+.topo { background: #0a0f19; border-bottom: 2px solid var(--neon); }
+.topo-linha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 1.5rem;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0.9rem 1rem;
+}
+.logo {
+  font-family: var(--fonte-pixel);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: var(--neon);
+  text-decoration: none;
+  text-shadow: 0 0 8px rgba(29, 233, 214, 0.6);
+}
+.logo-simbolo { color: var(--laranja); margin-right: 0.4rem; }
+.busca { display: flex; flex: 1 1 320px; min-width: 0; }
+.busca input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.6rem 0.8rem;
+  font: inherit;
+  color: #000;
+  background: #fff;
+  border: 2px solid var(--laranja);
+  border-right: 0;
+  border-radius: 0;
+}
+.botao-busca {
+  background: var(--laranja);
+  color: #0b0f17;
+  border: 2px solid var(--laranja);
+  padding: 0.6rem 1.1rem;
+}
+.conta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-family: var(--fonte-ui);
+  font-size: 1.1rem;
+}
+.saudacao { margin: 0; font-weight: 700; }
+.link-conta { font-weight: 700; text-decoration: none; padding: 0.3rem 0.2rem; }
+.link-conta[aria-current='page'] { border-bottom: 3px solid var(--neon); }
+.faixa { background: var(--superficie-2); }
+.faixa ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.5rem;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0.4rem 1rem;
+  list-style: none;
+  font-family: var(--fonte-ui);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.faixa a { color: var(--texto); text-decoration: none; padding: 0.3rem 0; display: inline-block; }
+.faixa a:hover { color: var(--neon); }
+.faixa a[aria-current='page'] { color: var(--neon); border-bottom: 3px solid var(--neon); }
+
+/* ---------- 4. Conteúdo principal ---------- */
+main { max-width: 1180px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+main:focus { outline: none; }
+.titulo-pixel {
+  font-family: var(--fonte-pixel);
+  font-size: clamp(1rem, 2.6vw, 1.6rem);
+  line-height: 1.6;
+  color: var(--neon);
+  text-shadow: 0 0 10px rgba(29, 233, 214, 0.5);
+  margin: 0.3rem 0 0.8rem;
+}
+.titulo-secao {
+  font-family: var(--fonte-ui);
+  font-size: 1.6rem;
+  letter-spacing: 0.03em;
+  margin: 0 0 1rem;
+  padding-left: 0.7rem;
+  border-left: 6px solid var(--neon);
+}
+.titulo-secao:focus { outline-offset: 6px; }
+.bits {
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  font-family: var(--fonte-pixel);
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  color: var(--neon);
+  opacity: 0.7;
+}
+.bits::after { content: '_'; animation: piscar 1s steps(2, start) infinite; }
+@keyframes piscar { to { visibility: hidden; } }
+.hero, .painel, .cartao {
+  background: var(--superficie);
+  box-shadow: inset 0 3px 0 var(--neon);
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+}
+.hero { margin-bottom: 2rem; padding: 1.5rem 1.5rem 1.2rem; background-image: linear-gradient(120deg, rgba(29, 233, 214, 0.14), transparent 60%); }
+.hero p { max-width: 60ch; }
+.painel { margin: 2rem 0; padding: 1.5rem; }
+.painel-form { max-width: 560px; margin-left: auto; margin-right: auto; }
+
+/* ---------- 5. Vitrine de livros ---------- */
+.grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cartao { display: flex; flex-direction: column; padding: 1.1rem; }
+.cartao h3 { margin: 0.8rem 0 0.2rem; font-family: var(--fonte-ui); font-size: 1.3rem; line-height: 1.25; }
+.cartao p { margin: 0.3rem 0; }
+.autor { color: var(--texto-suave); }
+.descricao { font-size: 0.9rem; flex: 1; }
+.capa {
+  aspect-ratio: 2 / 3;
+  background: linear-gradient(160deg, #1b2740, #0b1220);
+  border: 1px solid #2a3a58;
+  overflow: hidden;
+}
+.capa img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.preco { font-family: var(--fonte-ui); font-size: 1.7rem; font-weight: 700; color: #fff; }
+.selo {
+  display: inline-block;
+  padding: 0.1rem 0.6rem;
+  font-family: var(--fonte-ui);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #07110d;
+}
+.selo-iniciante { background: var(--verde); }
+.selo-intermediario { background: var(--ambar); }
+.selo-avancado { background: var(--rosa); }
+
+/* ---------- 6. Botões ---------- */
+.botao {
+  display: inline-block;
+  padding: 0.65rem 1.2rem;
+  font-family: var(--fonte-ui);
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 0;
+}
+.botao-comprar { width: 100%; background: var(--laranja); color: #0b0f17; }
+.botao-comprar:hover { background: #ffb340; }
+.botao-principal { background: var(--neon); color: #04110f; border-color: var(--neon); }
+.botao-principal:hover { background: #7ffff1; color: #04110f; }
+.botao-leve { background: transparent; color: var(--texto); border-color: var(--linha); }
+.botao-leve:hover { border-color: var(--neon); color: var(--neon); }
+
+/* ---------- 7. Formulários ---------- */
+.campo { margin-bottom: 1.2rem; }
+.campo label { display: block; font-weight: 600; margin-bottom: 0.2rem; }
+.campo input {
+  width: 100%;
+  padding: 0.65rem 0.8rem;
+  font: inherit;
+  color: var(--texto);
+  background: #0a0f19;
+  border: 2px solid var(--linha);
+  border-radius: 0;
+}
+.campo-controle { display: flex; align-items: stretch; }
+.campo-controle input { min-width: 0; }
+.botao-olho {
+  display: grid;
+  flex: 0 0 3rem;
+  place-items: center;
+  margin-left: -2px;
+  padding: 0.5rem;
+  color: var(--neon);
+  background: var(--superficie-2);
+  border: 2px solid var(--linha);
+  border-radius: 0;
+  cursor: pointer;
+}
+.botao-olho:hover { color: #fff; border-color: var(--neon); }
+.botao-olho svg { display: block; width: 1.5rem; height: 1rem; }
+.olho-pupila,
+.olho-fechado {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 160ms ease, opacity 160ms ease;
+}
+.olho-pupila { transform: scaleY(0); }
+.olho-fechado { opacity: 1; }
+.botao-olho.esta-visivel .olho-pupila { transform: scaleY(1); }
+.botao-olho.esta-visivel .olho-fechado { opacity: 0; transform: scaleX(0); }
+.campo-com-erro input { border-color: var(--erro-borda); border-width: 3px; }
+.dica { margin: 0 0 0.3rem; color: var(--texto-suave); font-size: 0.9rem; }
+.erro-campo { margin: 0 0 0.3rem; color: #ffb3c1; font-weight: 600; }
+.troca { margin-top: 1.5rem; }
+
+/* ---------- 8. Avisos ---------- */
+.aviso { margin: 0 0 1.5rem; padding: 0.8rem 1rem; border-left: 8px solid var(--verde); background: var(--ok-fundo); }
+.aviso-erro { border-left-color: var(--erro-borda); background: var(--erro-fundo); }
+.aviso h2 { margin: 0 0 0.4rem; font-family: var(--fonte-ui); font-size: 1.25rem; }
+.aviso p, .aviso ul { margin: 0; }
+.aviso ul { padding-left: 1.2rem; }
+.aviso a { color: #fff; }
+
+/* ---------- 9. Tabela de pedidos ---------- */
+.tabela { width: 100%; border-collapse: collapse; }
+.tabela caption { text-align: left; color: var(--texto-suave); margin-bottom: 0.5rem; }
+.tabela th, .tabela td { padding: 0.6rem; text-align: left; border-bottom: 1px solid #2a3a58; }
+.tabela thead th { background: var(--superficie-2); }
+.tabela tfoot th, .tabela tfoot td { font-weight: 700; font-size: 1.15rem; border-bottom: 0; }
+
+/* ---------- 10. Rodapé ---------- */
+.rodape {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 2.5rem;
+  border-top: 1px solid #2a3a58;
+  color: var(--texto-suave);
+  font-size: 0.9rem;
+}
+.rodape p { margin: 0.2rem 0; }
+
+/* ---------- 11. Preferências do usuário ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .bits::after { animation: none; }
+  .olho-pupila, .olho-fechado { transition: none; }
+}
+@media (forced-colors: active) {
+  .botao { border: 2px solid ButtonText; }
+  .hero, .painel, .cartao { border: 1px solid CanvasText; }
+}
+@media (max-width: 640px) {
+  .conta { width: 100%; justify-content: space-between; }
+}

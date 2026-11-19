@@ -1,1 +1,77 @@
+<%- include('partials/cabecalho') %>
+<%
+  const classeNivel = { 'Iniciante': 'iniciante', 'Intermediário': 'intermediario', 'Avançado': 'avancado' };
+  const filtrando = busca !== '' || nivel !== '';
+%>
 
+<section class="hero" aria-labelledby="titulo-pagina">
+  <p class="bits" aria-hidden="true">01001100 01001001 01010110 01010010 01001111 01010011</p>
+  <h1 id="titulo-pagina" class="titulo-pixel">Livros de programação</h1>
+  <p>Do primeiro &ldquo;Olá, mundo&rdquo; ao código profissional. Para todas as idades e todos os níveis.</p>
+</section>
+
+<section aria-labelledby="titulo-catalogo">
+  <h2 id="titulo-catalogo" class="titulo-secao" <%- filtrando ? 'tabindex="-1" data-foco' : '' %>>
+    Catálogo: <%= livros.length %> <%= livros.length === 1 ? 'livro encontrado' : 'livros encontrados' %>
+    <% if (nivel) { %> no nível <%= nivel %><% } %>
+    <% if (busca) { %> para &ldquo;<%= busca %>&rdquo;<% } %>
+  </h2>
+
+  <% if (livros.length === 0) { %>
+    <p>Nenhum livro encontrado. Tente outra palavra ou veja <a href="/">todos os níveis</a>.</p>
+  <% } else { %>
+    <ul class="grade">
+      <% livros.forEach((livro) => { %>
+        <li class="cartao">
+          <div class="capa">
+            <img src="https://covers.openlibrary.org/b/isbn/<%= livro.isbn %>-M.jpg" alt=""
+  width="180" height="270" loading="lazy">
+          </div>
+          <h3><%= livro.titulo %></h3>
+          <p class="autor">por <%= livro.autor %></p>
+          <p><span class="selo selo-<%= classeNivel[livro.nivel] %>">Nível: <%= livro.nivel %></span></p>
+          <p class="descricao"><%= livro.descricao %></p>
+          <p class="preco"><%= dinheiro(livro.precoCentavos) %></p>
+          <form action="/api/comprar/<%= livro.id %>" method="post">
+            <button class="botao botao-comprar" type="submit">Comprar<span class="so-leitor"> o livro <%= livro.titulo %></span></button>
+          </form>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+</section>
+
+<section class="painel" aria-labelledby="titulo-pedidos">
+  <h2 id="titulo-pedidos" class="titulo-secao">Seus pedidos</h2>
+  <% if (pedidos.length === 0) { %>
+    <p>Você ainda não comprou nenhum livro.</p>
+  <% } else { %>
+    <table class="tabela">
+      <caption>Livros que você já comprou, do mais novo para o mais antigo</caption>
+      <thead>
+        <tr>
+          <th scope="col">Livro</th>
+          <th scope="col">Data</th>
+          <th scope="col">Valor</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% pedidos.forEach((p) => { %>
+          <tr>
+            <th scope="row"><%= p.Livro.titulo %></th>
+            <td><%= new Date(p.createdAt).toLocaleDateString('pt-BR') %></td>
+            <td><%= dinheiro(p.Livro.precoCentavos * p.quantidade) %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+      <tfoot>
+        <tr>
+          <th scope="row" colspan="2">Total</th>
+          <td><%= dinheiro(total) %></td>
+        </tr>
+      </tfoot>
+    </table>
+  <% } %>
+</section>
+
+<%- include('partials/rodape') %>

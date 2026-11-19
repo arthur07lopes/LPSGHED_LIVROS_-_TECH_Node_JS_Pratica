@@ -4,21 +4,28 @@
   "description": "Loja de livros tech desenvolvida por Arthur Santos Lopes e Gabriel Heineck Haberkamp.",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "node --watch server.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/arthur07lopes/LPSFH_LIVROS_-_TECH_Node_JS_Pratica.git"
+    "url": "git+https://github.com/arthur07lopes/LPSGH_LIVROS_-_TECH_Node_JS_Pratica.git"
   },
   "author": "Gabriel Haberkamp, Arthur Lopes",
   "license": "GPL-3.0-or-later",
   "bugs": {
-    "url": "https://github.com/arthur07lopes/LPSFH_LIVROS_-_TECH_Node_JS_Pratica/issues"
+    "url": "https://github.com/arthur07lopes/LPSGH_LIVROS_-_TECH_Node_JS_Pratica/issues"
   },
-  "homepage": "https://github.com/arthur07lopes/LPSFH_LIVROS_-_TECH_Node_JS_Pratica#readme",
+  "homepage": "https://github.com/arthur07lopes/LPSGH_LIVROS_-_TECH_Node_JS_Pratica#readme",
+  "engines": {
+    "node": ">=20.17.0"
+  },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "ejs": "^7.0.2",
-    "express": "^5.3.0"
+    "express": "^5.3.0",
+    "express-session": "^1.19.0",
+    "sequelize": "^6.37.8",
+    "sqlite3": "^6.0.1"
   }
 }
