@@ -25,7 +25,7 @@ app.use(express.urlencoded({ extended: false })); // lê formulários
 app.use(express.json()); // lê JSON (para a API)
 app.use(
   session({
-    secret: process.env.SEGREDO || 'troque-este-segredo-antes-de-publicar',
+    secret: process.env.SEGREDO || 'GabrielAtacadorDeNucas2026',
     resave: false,
     saveUninitialized: false,
     cookie: { httpOnly: true, sameSite: 'lax' },
