@@ -10,6 +10,9 @@ const { Sequelize, DataTypes } = require('sequelize');
 const pastaDados = path.join(__dirname, 'dados');
 fs.mkdirSync(pastaDados, { recursive: true });
 
+// Quantas unidades cada livro tem no estoque quando a loja começa.
+const ESTOQUE_PADRAO = 5;
+
 const sequelize = new Sequelize({
   dialect: 'sqlite',
   storage: path.join(pastaDados, 'loja.sqlite'),
@@ -31,18 +34,64 @@ const Livro = sequelize.define('Livro', {
   nivel: { type: DataTypes.STRING, allowNull: false },
   descricao: { type: DataTypes.TEXT, allowNull: false },
   precoCentavos: { type: DataTypes.INTEGER, allowNull: false },
+  // Estoque compartilhado por todos os clientes da loja.
+  estoque: { type: DataTypes.INTEGER, allowNull: false, defaultValue: ESTOQUE_PADRAO },
 });
 
-// Tabela de compras: liga um usuário a um livro.
-const Compra = sequelize.define('Compra', {
-  quantidade: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 1 },
-});
+// Carrinho: cada linha é um livro (e a quantidade) no carrinho de um usuário.
+// Adicionar ao carrinho NÃO tira do estoque: o estoque só baixa ao finalizar o pedido.
+const ItemCarrinho = sequelize.define(
+  'ItemCarrinho',
+  { quantidade: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 1 } },
+  { tableName: 'itens_carrinho', indexes: [{ unique: true, fields: ['UsuarioId', 'LivroId'] }] }
+);
 
-// Relações: um usuário tem várias compras, e um livro também.
-Usuario.hasMany(Compra);
-Compra.belongsTo(Usuario);
-Livro.hasMany(Compra);
-Compra.belongsTo(Livro);
+// Pedido: só é criado quando o formulário de finalização é enviado.
+// Os dados pessoais e de pagamento são fictícios (simulação, sem cobrança).
+// Por segurança, do cartão guardamos apenas os 4 últimos dígitos.
+const Pedido = sequelize.define(
+  'Pedido',
+  {
+    totalCentavos: { type: DataTypes.INTEGER, allowNull: false },
+    nomeCompleto: DataTypes.STRING,
+    cpf: DataTypes.STRING,
+    dataNascimento: DataTypes.DATEONLY,
+    telefone: DataTypes.STRING,
+    cep: DataTypes.STRING,
+    logradouro: DataTypes.STRING,
+    numero: DataTypes.STRING,
+    complemento: DataTypes.STRING,
+    bairro: DataTypes.STRING,
+    cidade: DataTypes.STRING,
+    uf: DataTypes.STRING,
+    formaPagamento: DataTypes.STRING,
+    cartaoFinal: DataTypes.STRING,
+  },
+  { tableName: 'pedidos' }
+);
+
+// Itens do pedido: livro, quantidade e o preço da hora da compra.
+const ItemPedido = sequelize.define(
+  'ItemPedido',
+  {
+    quantidade: { type: DataTypes.INTEGER, allowNull: false },
+    precoCentavos: { type: DataTypes.INTEGER, allowNull: false },
+  },
+  { tableName: 'itens_pedido' }
+);
+
+// Relações.
+Usuario.hasMany(ItemCarrinho);
+ItemCarrinho.belongsTo(Usuario);
+Livro.hasMany(ItemCarrinho);
+ItemCarrinho.belongsTo(Livro);
+
+Usuario.hasMany(Pedido);
+Pedido.belongsTo(Usuario);
+Pedido.hasMany(ItemPedido);
+ItemPedido.belongsTo(Pedido);
+Livro.hasMany(ItemPedido);
+ItemPedido.belongsTo(Livro);
 
 // Livros de exemplo. Títulos reais, preços fictícios (é um projeto de estudo).
 const LIVROS_INICIAIS = [
@@ -112,9 +161,54 @@ const LIVROS_INICIAIS = [
   },
 ];
 
+// Bancos criados antes do carrinho: o sync() não altera tabelas que já existem,
+// então adicionamos o estoque e trazemos as compras antigas para a tabela de pedidos.
+async function atualizarBancoAntigo() {
+  const consulta = sequelize.getQueryInterface();
+
+  const colunasLivro = await consulta.describeTable('Livros');
+  if (!colunasLivro.estoque) {
+    await consulta.addColumn('Livros', 'estoque', {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: ESTOQUE_PADRAO,
+    });
+  }
+
+  const tabelas = await consulta.showAllTables();
+  if (!tabelas.includes('Compras')) return;
+
+  await sequelize.transaction(async (transacao) => {
+    const [antigas] = await sequelize.query('SELECT * FROM Compras', { transaction: transacao });
+    for (const antiga of antigas) {
+      const livro = await Livro.findByPk(antiga.LivroId, { transaction: transacao });
+      if (!livro) continue;
+      const pedido = await Pedido.create(
+        {
+          UsuarioId: antiga.UsuarioId,
+          totalCentavos: livro.precoCentavos * antiga.quantidade,
+          createdAt: antiga.createdAt,
+        },
+        { transaction: transacao }
+      );
+      await ItemPedido.create(
+        {
+          PedidoId: pedido.id,
+          LivroId: livro.id,
+          quantidade: antiga.quantidade,
+          precoCentavos: livro.precoCentavos,
+        },
+        { transaction: transacao }
+      );
+    }
+    await consulta.dropTable('Compras', { transaction: transacao });
+  });
+}
+
 // Cria as tabelas (se ainda não existem) e coloca os livros de exemplo.
 async function iniciarBanco() {
   await sequelize.sync();
+  await atualizarBancoAntigo();
 
   const TITULOS_ANTERIORES = {
     'Eloquent JavaScript': 'JavaScript Eloquente',
@@ -140,4 +234,4 @@ async function iniciarBanco() {
   }
 }
 
-module.exports = { Usuario, Livro, Compra, iniciarBanco };
+module.exports = { sequelize, Usuario, Livro, ItemCarrinho, Pedido, ItemPedido, iniciarBanco };

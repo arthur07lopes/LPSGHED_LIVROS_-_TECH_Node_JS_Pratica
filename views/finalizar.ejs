@@ -1,0 +1,124 @@
+<%- include('partials/cabecalho') %>
+
+<section class="painel painel-form" aria-labelledby="titulo-pagina">
+  <p class="bits" aria-hidden="true">01010000 01000101 01000100 01001001 01000100 01001111</p>
+  <h1 id="titulo-pagina" class="titulo-pixel">Finalizar pedido</h1>
+
+  <div class="aviso aviso-info">
+    <p><strong>Simulação:</strong> nenhum valor será cobrado e nenhum livro será enviado. Não digite dados reais de cartão: use o cartão de teste 4111 1111 1111 1111.</p>
+  </div>
+
+  <h2 class="titulo-secao" id="titulo-resumo">Resumo do pedido</h2>
+  <div class="tabela-rolagem">
+  <table class="tabela">
+    <caption>Livros deste pedido</caption>
+    <thead>
+      <tr>
+        <th scope="col">Livro</th>
+        <th scope="col">Quantidade</th>
+        <th scope="col">Preço de cada</th>
+        <th scope="col">Subtotal</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% itens.forEach((item) => { %>
+        <tr>
+          <th scope="row"><%= item.livro.titulo %></th>
+          <td><%= item.quantidade %></td>
+          <td><%= dinheiro(item.livro.precoCentavos) %></td>
+          <td><%= dinheiro(item.livro.precoCentavos * item.quantidade) %></td>
+        </tr>
+      <% }) %>
+    </tbody>
+    <tfoot>
+      <tr>
+        <th scope="row" colspan="3">Total</th>
+        <td><%= dinheiro(total) %></td>
+      </tr>
+    </tfoot>
+  </table>
+  </div>
+  <p><a href="<%= direta ? '/' : '/carrinho' %>"><%= direta ? 'Voltar para a loja' : 'Voltar para o carrinho' %></a></p>
+
+  <% if (erros.length > 0) { %>
+    <div id="resumo-erros" class="aviso aviso-erro" role="alert" tabindex="-1" data-foco>
+      <h2>Encontramos <%= erros.length %> <%= erros.length === 1 ? 'problema' : 'problemas' %> no formulário</h2>
+      <ul>
+        <% erros.forEach((e) => { %>
+          <li><a href="#<%= e.campo %>"><%= e.texto %></a></li>
+        <% }) %>
+      </ul>
+    </div>
+  <% } %>
+
+  <form class="formulario" action="/api/finalizar" method="post" novalidate>
+    <% if (direta) { %>
+      <input type="hidden" name="livro" value="<%= valores.livro %>">
+      <input type="hidden" name="quantidade" value="<%= valores.quantidade %>">
+    <% } %>
+    <p>Todos os campos são obrigatórios, menos o complemento.</p>
+
+    <fieldset>
+      <legend>Seus dados</legend>
+      <%- include('partials/campo', { id: 'nomeCompleto', rotulo: 'Nome completo', tipo: 'text',
+           autocomplete: 'name', dica: '', valor: valores.nomeCompleto || '', erros }) %>
+      <%- include('partials/campo', { id: 'cpf', rotulo: 'CPF', tipo: 'text', modo: 'numeric',
+           autocomplete: 'off', dica: 'Só números ou com pontos e traço. Exemplo: 529.982.247-25',
+           valor: valores.cpf || '', erros }) %>
+      <%- include('partials/campo', { id: 'nascimento', rotulo: 'Data de nascimento', tipo: 'text', modo: 'numeric',
+           autocomplete: 'off', dica: 'Dia, mês e ano com barras. Exemplo: 25/12/1990',
+           valor: valores.nascimento || '', erros }) %>
+      <%- include('partials/campo', { id: 'telefone', rotulo: 'Telefone com DDD', tipo: 'tel', modo: 'tel',
+           autocomplete: 'tel-national', dica: 'Exemplo: (55) 99999-8888', valor: valores.telefone || '', erros }) %>
+    </fieldset>
+
+    <fieldset>
+      <legend>Endereço de entrega</legend>
+      <%- include('partials/campo', { id: 'cep', rotulo: 'CEP', tipo: 'text', modo: 'numeric',
+           autocomplete: 'postal-code', dica: 'Exemplo: 96810-000', valor: valores.cep || '', erros }) %>
+      <%- include('partials/campo', { id: 'logradouro', rotulo: 'Rua ou avenida', tipo: 'text',
+           autocomplete: 'address-line1', dica: '', valor: valores.logradouro || '', erros }) %>
+      <%- include('partials/campo', { id: 'numero', rotulo: 'Número', tipo: 'text',
+           autocomplete: 'off', dica: 'Escreva S/N se não houver número.', valor: valores.numero || '', erros }) %>
+      <%- include('partials/campo', { id: 'complemento', rotulo: 'Complemento (opcional)', tipo: 'text', opcional: true,
+           autocomplete: 'address-line2', dica: 'Exemplo: apartamento 12', valor: valores.complemento || '', erros }) %>
+      <%- include('partials/campo', { id: 'bairro', rotulo: 'Bairro', tipo: 'text',
+           autocomplete: 'off', dica: '', valor: valores.bairro || '', erros }) %>
+      <%- include('partials/campo', { id: 'cidade', rotulo: 'Cidade', tipo: 'text',
+           autocomplete: 'address-level2', dica: '', valor: valores.cidade || '', erros }) %>
+      <%- include('partials/selecao', { id: 'uf', rotulo: 'Estado', autocomplete: 'address-level1',
+           opcoes: ufs, valor: valores.uf || '', erros }) %>
+    </fieldset>
+
+    <% const erroPagamento = erros.find((e) => e.campo === 'pagamento'); %>
+    <fieldset <%- erroPagamento ? 'aria-describedby="erro-pagamento"' : '' %>>
+      <legend>Forma de pagamento (fictícia)</legend>
+      <% if (erroPagamento) { %>
+        <p class="erro-campo" id="erro-pagamento"><span class="so-leitor">Erro:</span> <%= erroPagamento.texto %></p>
+      <% } %>
+      <% Object.entries(formas).forEach(([chave, nome], posicao) => { %>
+        <div class="opcao">
+          <input type="radio" id="<%= posicao === 0 ? 'pagamento' : 'pagamento-' + chave %>" name="pagamento"
+                 value="<%= chave %>" <%= valores.pagamento === chave ? 'checked' : '' %> required>
+          <label for="<%= posicao === 0 ? 'pagamento' : 'pagamento-' + chave %>"><%= nome %></label>
+        </div>
+      <% }) %>
+    </fieldset>
+
+    <fieldset id="dados-cartao">
+      <legend>Dados do cartão de teste</legend>
+      <%- include('partials/campo', { id: 'cartaoNumero', rotulo: 'Número do cartão', tipo: 'text', modo: 'numeric',
+           autocomplete: 'cc-number', dica: 'Cartão de teste: 4111 1111 1111 1111', valor: '', erros }) %>
+      <%- include('partials/campo', { id: 'cartaoNome', rotulo: 'Nome como está no cartão', tipo: 'text',
+           autocomplete: 'cc-name', dica: '', valor: valores.cartaoNome || '', erros }) %>
+      <%- include('partials/campo', { id: 'cartaoValidade', rotulo: 'Validade', tipo: 'text', modo: 'numeric',
+           autocomplete: 'cc-exp', dica: 'Mês e ano com barra. Exemplo: 12/30', valor: valores.cartaoValidade || '', erros }) %>
+      <%- include('partials/campo', { id: 'cartaoCvv', rotulo: 'Código de segurança', tipo: 'text', modo: 'numeric',
+           autocomplete: 'cc-csc', dica: 'Três ou quatro números. Exemplo: 123', valor: '', erros }) %>
+    </fieldset>
+
+    <button class="botao botao-principal" type="submit">Confirmar pedido (simulação)</button>
+  </form>
+</section>
+
+<%- include('partials/rodape') %>

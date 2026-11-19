@@ -310,3 +310,75 @@ main:focus { outline: none; }
 @media (max-width: 640px) {
   .conta { width: 100%; justify-content: space-between; }
 }
+
+/* ---------- 12. Carrinho, estoque e finalização ---------- */
+.link-carrinho { white-space: nowrap; }
+.estoque { margin: 0.3rem 0; font-weight: 600; color: var(--texto-suave); }
+.estoque-zero { color: #ffb3c1; }
+.form-livro { display: grid; gap: 0.6rem; margin-top: 0.6rem; }
+.campo-quantidade { display: flex; align-items: center; gap: 0.6rem; }
+.campo-quantidade label { font-weight: 600; }
+.campo-quantidade input,
+.form-linha input {
+  width: 5rem;
+  padding: 0.5rem 0.6rem;
+  font: inherit;
+  color: var(--texto);
+  background: #0a0f19;
+  border: 2px solid var(--linha);
+  border-radius: 0;
+}
+.botao-carrinho { width: 100%; background: transparent; color: var(--neon); border-color: var(--neon); }
+.botao-carrinho:hover { background: var(--neon); color: #04110f; }
+.form-linha { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.tabela-rolagem { overflow-x: auto; }
+.tabela td form, .tabela th p { margin: 0; }
+.acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-top: 1.5rem; }
+.acoes p, .acoes form { margin: 0; }
+.aviso-info { border-left-color: var(--neon); background: var(--superficie-2); margin-bottom: 1.5rem; }
+fieldset {
+  margin: 0 0 1.5rem;
+  padding: 1rem 1rem 0.2rem;
+  border: 2px solid var(--linha);
+  border-radius: 0;
+}
+fieldset[hidden] { display: none; }
+legend { padding: 0 0.4rem; font-family: var(--fonte-ui); font-size: 1.25rem; font-weight: 700; }
+.opcao { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.8rem; }
+.opcao input { width: 1.3rem; height: 1.3rem; accent-color: var(--neon); }
+.campo select {
+  width: 100%;
+  padding: 0.65rem 0.8rem;
+  font: inherit;
+  color: var(--texto);
+  background: #0a0f19;
+  border: 2px solid var(--linha);
+  border-radius: 0;
+}
+.campo-com-erro select { border-color: var(--erro-borda); border-width: 3px; }
+.dialogo {
+  max-width: min(32rem, calc(100% - 2rem));
+  padding: 1.5rem;
+  color: var(--texto);
+  background: var(--superficie);
+  border: 3px solid var(--neon);
+}
+.dialogo::backdrop { background: rgba(0, 0, 0, 0.8); }
+.dialogo h2 { margin: 0 0 0.6rem; font-family: var(--fonte-ui); font-size: 1.6rem; }
+.dialogo h2:focus { outline-offset: 4px; }
+.dialogo-botoes { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1.2rem; }
+.dialogo-botoes form { margin: 0; }
+.botao-passo {
+  flex: 0 0 auto;
+  min-width: 2.6rem;
+  padding: 0.4rem 0.6rem;
+  font: 700 1.3rem/1 var(--fonte-ui);
+  color: var(--neon);
+  background: var(--superficie-2);
+  border: 2px solid var(--linha);
+  border-radius: 0;
+  cursor: pointer;
+}
+.botao-passo:hover { color: #fff; border-color: var(--neon); }
+.campo-quantidade input[type='number'], .form-linha input[type='number'] { width: 4rem; text-align: center; appearance: textfield; -moz-appearance: textfield; }
+.campo-quantidade input::-webkit-inner-spin-button, .form-linha input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }

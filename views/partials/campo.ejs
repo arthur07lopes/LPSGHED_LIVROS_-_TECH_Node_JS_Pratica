@@ -1,6 +1,7 @@
 <%
   // Um campo de formulário completo: rótulo, dica, erro e input.
   // Recebe: id, rotulo, tipo, autocomplete, dica, valor, erros.
+  // Opcionais: opcional (true = não é obrigatório), modo (inputmode do teclado).
   const erroDoCampo = erros.find((e) => e.campo === id);
   const ligacoes = [];
   if (dica) ligacoes.push('dica-' + id);
@@ -16,7 +17,8 @@
   <% } %>
   <div class="campo-controle">
     <input id="<%= id %>" name="<%= id %>" type="<%= tipo %>" autocomplete="<%= autocomplete %>"
-           value="<%= valor %>" required
+           value="<%= valor %>" <%- locals.opcional ? '' : 'required' %>
+           <%- locals.modo ? 'inputmode="' + locals.modo + '"' : '' %>
            <%- ligacoes.length ? 'aria-describedby="' + ligacoes.join(' ') + '"' : '' %>
            <%- erroDoCampo ? 'aria-invalid="true"' : '' %>>
     <% if (tipo === 'password') { %>

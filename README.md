@@ -14,7 +14,16 @@ Projeto educacional de loja de livros de programação feito pelos alunos do SEN
 
 - `/cadastro`: criar conta
 - `/login`: entrar
-- `/`: loja de livros (precisa estar logado)
+- `/`: loja de livros e tabela "Seus pedidos" (precisa estar logado)
+- `/carrinho`: carrinho de compras (salvo no banco, por usuário)
+- `/finalizar`: formulário de finalização do pedido (simulação, sem cobrança)
+
+## Compras e estoque
+
+- Cada livro começa com 5 unidades em estoque, compartilhadas entre todos os clientes.
+- "Comprar" e "Adicionar ao carrinho" aceitam mais de uma unidade por vez.
+- O pedido só é gravado quando o formulário de finalização é enviado; só então o estoque baixa.
+- Dados pessoais e de pagamento são fictícios. Do cartão guardamos só os 4 últimos dígitos.
 
 ## Tecnologias
 

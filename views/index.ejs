@@ -10,6 +10,10 @@
   <p>Do primeiro &ldquo;Olá, mundo&rdquo; ao código profissional. Para todas as idades e todos os níveis.</p>
 </section>
 
+<div id="aviso-dinamico" class="aviso aviso-erro" role="alert" tabindex="-1" hidden>
+  <p></p>
+</div>
+
 <section aria-labelledby="titulo-catalogo">
   <h2 id="titulo-catalogo" class="titulo-secao" <%- filtrando ? 'tabindex="-1" data-foco' : '' %>>
     Catálogo: <%= livros.length %> <%= livros.length === 1 ? 'livro encontrado' : 'livros encontrados' %>
@@ -32,9 +36,21 @@
           <p><span class="selo selo-<%= classeNivel[livro.nivel] %>">Nível: <%= livro.nivel %></span></p>
           <p class="descricao"><%= livro.descricao %></p>
           <p class="preco"><%= dinheiro(livro.precoCentavos) %></p>
-          <form action="/api/comprar/<%= livro.id %>" method="post">
-            <button class="botao botao-comprar" type="submit">Comprar<span class="so-leitor"> o livro <%= livro.titulo %></span></button>
-          </form>
+          <% if (livro.estoque === 0) { %>
+            <p class="estoque estoque-zero">Esgotado</p>
+          <% } else { %>
+            <p class="estoque" id="estoque-<%= livro.id %>"><%= livro.estoque <= 2 ? 'Últimas ' + livro.estoque + (livro.estoque === 1 ? ' unidade' : ' unidades') + ' em estoque' : 'Em estoque: ' + livro.estoque + ' unidades' %></p>
+            <form class="form-livro" action="/api/carrinho/adicionar/<%= livro.id %>" method="post" data-titulo="<%= livro.titulo %>">
+              <div class="campo-quantidade">
+                <label for="quantidade-<%= livro.id %>">Quantidade</label>
+                <input id="quantidade-<%= livro.id %>" name="quantidade" type="number" inputmode="numeric"
+                       min="1" max="<%= livro.estoque %>" value="1" required
+                       aria-label="Quantidade de <%= livro.titulo %>" aria-describedby="estoque-<%= livro.id %>">
+              </div>
+              <button class="botao botao-comprar" type="submit" formaction="/api/comprar/<%= livro.id %>" aria-label="Comprar o livro <%= livro.titulo %>">Comprar</button>
+              <button class="botao botao-carrinho" type="submit" data-adicionar aria-label="Adicionar ao carrinho: <%= livro.titulo %>">Adicionar ao carrinho</button>
+            </form>
+          <% } %>
         </li>
       <% }) %>
     </ul>
@@ -44,34 +60,57 @@
 <section class="painel" aria-labelledby="titulo-pedidos">
   <h2 id="titulo-pedidos" class="titulo-secao">Seus pedidos</h2>
   <% if (pedidos.length === 0) { %>
-    <p>Você ainda não comprou nenhum livro.</p>
+    <p>Você ainda não fez nenhum pedido.</p>
   <% } else { %>
+    <div class="tabela-rolagem">
     <table class="tabela">
-      <caption>Livros que você já comprou, do mais novo para o mais antigo</caption>
+      <caption>Livros que você já comprou, do pedido mais novo para o mais antigo</caption>
       <thead>
         <tr>
-          <th scope="col">Livro</th>
+          <th scope="col">Pedido</th>
           <th scope="col">Data</th>
-          <th scope="col">Valor</th>
+          <th scope="col">Livro</th>
+          <th scope="col">Quantidade</th>
+          <th scope="col">Preço de cada</th>
+          <th scope="col">Subtotal</th>
         </tr>
       </thead>
       <tbody>
         <% pedidos.forEach((p) => { %>
-          <tr>
-            <th scope="row"><%= p.Livro.titulo %></th>
-            <td><%= new Date(p.createdAt).toLocaleDateString('pt-BR') %></td>
-            <td><%= dinheiro(p.Livro.precoCentavos * p.quantidade) %></td>
-          </tr>
+          <% p.ItemPedidos.forEach((item) => { %>
+            <tr>
+              <td>Nº <%= p.id %></td>
+              <td><%= new Date(p.createdAt).toLocaleDateString('pt-BR') %></td>
+              <th scope="row"><%= item.Livro.titulo %></th>
+              <td><%= item.quantidade %></td>
+              <td><%= dinheiro(item.precoCentavos) %></td>
+              <td><%= dinheiro(item.precoCentavos * item.quantidade) %></td>
+            </tr>
+          <% }) %>
         <% }) %>
       </tbody>
       <tfoot>
         <tr>
-          <th scope="row" colspan="2">Total</th>
+          <th scope="row" colspan="3">Total</th>
+          <td><%= totalLivros %> <%= totalLivros === 1 ? 'livro' : 'livros' %></td>
+          <td></td>
           <td><%= dinheiro(total) %></td>
         </tr>
       </tfoot>
     </table>
+    </div>
   <% } %>
 </section>
+
+<dialog id="dialogo-carrinho" class="dialogo" aria-labelledby="titulo-dialogo-carrinho" aria-describedby="texto-dialogo-carrinho">
+  <h2 id="titulo-dialogo-carrinho" tabindex="-1">Produto adicionado ao carrinho!</h2>
+  <p id="texto-dialogo-carrinho"></p>
+  <div class="dialogo-botoes">
+    <button class="botao botao-leve" type="button" id="continuar-compras">Continuar as compras</button>
+    <form action="/finalizar" method="get">
+      <button class="botao botao-principal" type="submit">Finalizar pedido</button>
+    </form>
+  </div>
+</dialog>
 
 <%- include('partials/rodape') %>
