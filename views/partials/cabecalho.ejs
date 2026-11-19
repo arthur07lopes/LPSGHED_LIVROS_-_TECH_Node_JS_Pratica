@@ -59,7 +59,7 @@
   <main id="conteudo" tabindex="-1">
     <% if (mensagem) { %>
       <div id="mensagem" class="aviso aviso-<%= mensagem.tipo %>"
-           role="<%= mensagem.tipo === 'erro' ? 'alert' : 'status' %>" tabindex="-1" data-foco>
+           role="alert" tabindex="-1" data-foco>
         <p><%= mensagem.texto %></p>
       </div>
     <% } %>
