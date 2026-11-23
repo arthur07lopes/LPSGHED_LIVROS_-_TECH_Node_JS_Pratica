@@ -6,7 +6,7 @@
 <div class="campo<%= erroDaLista ? ' campo-com-erro' : '' %>">
   <label for="<%= id %>"><%= rotulo %></label>
   <% if (erroDaLista) { %>
-    <p class="erro-campo" id="erro-<%= id %>"><span class="so-leitor">Erro:</span> <%= erroDaLista.texto %></p>
+    <p class="erro-campo" id="erro-<%= id %>" role="alert"><span class="so-leitor">Erro:</span> <%= erroDaLista.texto %></p>
   <% } %>
   <select id="<%= id %>" name="<%= id %>" autocomplete="<%= autocomplete %>" required
           <%- erroDaLista ? 'aria-describedby="erro-' + id + '" aria-invalid="true"' : '' %>>

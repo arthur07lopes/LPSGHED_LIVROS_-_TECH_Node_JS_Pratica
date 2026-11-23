@@ -94,7 +94,7 @@
     <fieldset <%- erroPagamento ? 'aria-describedby="erro-pagamento"' : '' %>>
       <legend>Forma de pagamento (fictícia)</legend>
       <% if (erroPagamento) { %>
-        <p class="erro-campo" id="erro-pagamento"><span class="so-leitor">Erro:</span> <%= erroPagamento.texto %></p>
+        <p class="erro-campo" id="erro-pagamento" role="alert"><span class="so-leitor">Erro:</span> <%= erroPagamento.texto %></p>
       <% } %>
       <% Object.entries(formas).forEach(([chave, nome], posicao) => { %>
         <div class="opcao">

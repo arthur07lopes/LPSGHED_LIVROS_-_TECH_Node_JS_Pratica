@@ -13,7 +13,7 @@
     <p class="dica" id="dica-<%= id %>"><%= dica %></p>
   <% } %>
   <% if (erroDoCampo) { %>
-    <p class="erro-campo" id="erro-<%= id %>"><span class="so-leitor">Erro:</span> <%= erroDoCampo.texto %></p>
+    <p class="erro-campo" id="erro-<%= id %>" role="alert"><span class="so-leitor">Erro:</span> <%= erroDoCampo.texto %></p>
   <% } %>
   <div class="campo-controle">
     <input id="<%= id %>" name="<%= id %>" type="<%= tipo %>" autocomplete="<%= autocomplete %>"
