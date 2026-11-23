@@ -13,6 +13,11 @@
   <script src="/js/carrinho.js" defer></script>
 </head>
 <body>
+  <!-- Região de anúncio, invisível e sempre vazia ao carregar. O foco.js escreve aqui o aviso
+       da página DEPOIS que ela carrega. Leitores de tela (NVDA) só anunciam um role="alert"
+       quando o texto muda; um alerta que já nasce pronto no HTML costuma passar em silêncio. -->
+  <div id="anuncio" class="so-leitor" role="alert"></div>
+
   <a class="pular" href="#conteudo">Pular para o conteúdo principal</a>
 
   <header class="topo">
@@ -58,8 +63,8 @@
 
   <main id="conteudo" tabindex="-1">
     <% if (mensagem) { %>
-      <div id="mensagem" class="aviso aviso-<%= mensagem.tipo %>"
-           role="alert" tabindex="-1" data-foco>
+      <%# Sem role="alert" aqui: o anúncio é feito pela região #anuncio (veja foco.js). %>
+      <div id="mensagem" class="aviso aviso-<%= mensagem.tipo %>" data-anunciar>
         <p><%= mensagem.texto %></p>
       </div>
     <% } %>

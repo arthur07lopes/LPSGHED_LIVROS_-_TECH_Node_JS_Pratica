@@ -6,6 +6,17 @@ if (alvo) {
   alvo.focus();
 }
 
+// Avisos marcados com data-anunciar (ex.: "Pedido número 1 realizado!") são lidos em voz alta
+// pela região #anuncio. Esperamos um instante e só então escrevemos o texto nela: o leitor de
+// tela anuncia mudanças, e não conteúdo que já estava na página ao carregar.
+const aviso = document.querySelector('[data-anunciar]');
+const anuncio = document.getElementById('anuncio');
+if (aviso && anuncio) {
+  setTimeout(() => {
+    anuncio.textContent = aviso.textContent.trim();
+  }, 300);
+}
+
 document.querySelectorAll('.botao-olho').forEach((botao) => {
   botao.addEventListener('click', () => {
     const campo = document.getElementById(botao.getAttribute('aria-controls'));
