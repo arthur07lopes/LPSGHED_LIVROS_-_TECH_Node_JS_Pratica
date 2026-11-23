@@ -163,9 +163,12 @@ const LIVROS_INICIAIS = [
 
 // Bancos criados antes do carrinho: o sync() não altera tabelas que já existem,
 // então adicionamos o estoque e trazemos as compras antigas para a tabela de pedidos.
+// (Se o seu banco é novo, esta função não faz nada.)
 async function atualizarBancoAntigo() {
+  // "QueryInterface" permite mexer na estrutura do banco: criar, alterar e apagar tabelas e colunas.
   const consulta = sequelize.getQueryInterface();
 
+  // Se a tabela de livros ainda não tem a coluna "estoque", cria.
   const colunasLivro = await consulta.describeTable('Livros');
   if (!colunasLivro.estoque) {
     await consulta.addColumn('Livros', 'estoque', {
@@ -175,9 +178,12 @@ async function atualizarBancoAntigo() {
     });
   }
 
+  // A tabela antiga "Compras" guardava uma compra por linha. Se ela existir, copiamos
+  // cada compra para o formato novo (um Pedido com um ItemPedido) e depois apagamos a antiga.
   const tabelas = await consulta.showAllTables();
   if (!tabelas.includes('Compras')) return;
 
+  // Transação: ou a migração inteira funciona, ou nada muda no banco.
   await sequelize.transaction(async (transacao) => {
     const [antigas] = await sequelize.query('SELECT * FROM Compras', { transaction: transacao });
     for (const antiga of antigas) {
@@ -210,6 +216,8 @@ async function iniciarBanco() {
   await sequelize.sync();
   await atualizarBancoAntigo();
 
+  // Em versões antigas os livros tinham o título em inglês. Aqui, "título antigo: título novo".
+  // Se algum livro com título antigo existir no banco, atualizamos para os dados em português.
   const TITULOS_ANTERIORES = {
     'Eloquent JavaScript': 'JavaScript Eloquente',
     'Python Crash Course': 'Curso Intensivo de Python',
@@ -229,6 +237,7 @@ async function iniciarBanco() {
     }
   }
 
+  // Banco vazio (primeira vez que a loja roda): cadastra os livros de exemplo.
   if ((await Livro.count()) === 0) {
     await Livro.bulkCreate(LIVROS_INICIAIS);
   }

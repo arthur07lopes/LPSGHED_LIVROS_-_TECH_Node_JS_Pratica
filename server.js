@@ -10,38 +10,66 @@ const { sequelize, Usuario, Livro, ItemCarrinho, Pedido, ItemPedido, iniciarBanc
 const v = require('./validacao');
 
 const app = express();
+
+// Porta do servidor. Em hospedagens, a porta vem da variável de ambiente PORT;
+// no seu computador, como ela não existe, usamos 3000.
 const PORTA = process.env.PORT || 3000;
+
+// Níveis aceitos no filtro da página inicial.
 const NIVEIS = ['Iniciante', 'Intermediário', 'Avançado'];
 
+// Limites de quantidade por livro em um mesmo pedido.
+const QUANTIDADE_MINIMA = 1;
+const QUANTIDADE_MAXIMA = 999;
+
 // ---------- Configuração ----------
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs'); // as páginas são arquivos .ejs (HTML com pedaços de JavaScript)
+app.set('views', path.join(__dirname, 'views')); // e ficam na pasta "views"
 
 // Função disponível dentro de todos os arquivos .ejs: 8990 vira "R$ 89,90".
 app.locals.dinheiro = (centavos) =>
   (centavos / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-app.use(express.static(path.join(__dirname, 'public'))); // css, js
-app.use(express.urlencoded({ extended: false })); // lê formulários
-app.use(express.json()); // lê JSON (para a API)
+// "Middlewares" são funções que rodam em toda requisição, na ordem em que aparecem aqui.
+// Cada uma faz o seu trabalho e chama next() para passar a vez à seguinte.
+app.use(express.static(path.join(__dirname, 'public'))); // entrega css e js direto da pasta "public"
+app.use(express.urlencoded({ extended: false })); // lê os dados de formulários HTML
+app.use(express.json()); // lê dados em JSON (para programas como curl e Postman)
+
+// A sessão guarda quem está logado. O navegador recebe só um cookie com um código,
+// e os dados de verdade ficam no servidor.
 app.use(
   session({
+    // Chave usada para assinar o cookie (impede que alguém forje um). Em produção,
+    // defina a variável de ambiente SEGREDO com um valor longo e só seu.
     secret: process.env.SEGREDO || 'GabrielAtacadorDeNucas2026',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { httpOnly: true, sameSite: 'lax' },
+    resave: false, // não regrava a sessão se nada mudou nela
+    saveUninitialized: false, // não cria sessão (nem cookie) para visitantes que não logaram
+    cookie: {
+      httpOnly: true, // o JavaScript da página não consegue ler o cookie (protege contra roubo por XSS)
+      // "lax": o navegador só envia o cookie em requisições do nosso próprio site, ou quando
+      // o usuário clica em um link vindo de fora. Impede que outro site envie formulários
+      // em nome do usuário logado (ataque CSRF) sem atrapalhar quem chega por um link.
+      sameSite: 'lax',
+    },
   })
 );
 
-// Roda em toda requisição: deixa dados prontos para todas as páginas.
+// Deixa dados prontos para todas as páginas. Tudo que vai em res.locals
+// fica disponível dentro dos arquivos .ejs.
 app.use((req, res, next) => {
   res.locals.usuario = req.session.usuario || null;
-  res.locals.mensagem = req.session.mensagem || null; // aviso de uma vez só
+
+  // Aviso "de uma vez só" (mensagem flash): guardado na sessão por uma requisição
+  // (por exemplo, antes de um redirect), mostrado na página seguinte e logo apagado.
+  res.locals.mensagem = req.session.mensagem || null;
+  delete req.session.mensagem;
+
+  // Valores padrão, para os .ejs não darem erro quando a rota não define algum deles.
   res.locals.pagina = '';
   res.locals.busca = '';
   res.locals.nivel = '';
   res.locals.itensCarrinho = 0;
-  delete req.session.mensagem;
   next();
 });
 
@@ -56,10 +84,15 @@ app.use(async (req, res, next) => {
 
 // ---------- Funções de apoio ----------
 // Programas (curl, Postman) pedem JSON; navegadores pedem HTML.
+// O cabeçalho "Accept" da requisição diz o que o cliente prefere receber.
+// req.accepts(['html', 'json']) devolve a opção preferida entre as duas;
+// se o cliente aceita as duas igualmente, "html" ganha por vir primeiro na lista.
 function querJson(req) {
   return req.accepts(['html', 'json']) === 'json';
 }
 
+// Guarda um aviso na sessão para aparecer na próxima página (veja "mensagem flash" acima).
+// tipo: 'sucesso' ou 'erro'.
 function avisar(req, tipo, texto) {
   req.session.mensagem = { tipo, texto };
 }
@@ -72,24 +105,32 @@ function exigirLogin(req, res, next) {
   res.redirect('/login');
 }
 
+// Escreve "1 unidade" ou "3 unidades", com o plural certo.
 const unidades = (n) => `${n} ${n === 1 ? 'unidade' : 'unidades'}`;
 
-// Lê uma quantidade vinda do formulário. Vazio vale 1; inválido vira null.
+// Lê uma quantidade vinda do formulário. Campo vazio vale 1; valor inválido vira null.
 function lerQuantidade(valor) {
-  if (valor === undefined || String(valor).trim() === '') return 1;
-  const n = Number(valor);
-  return Number.isInteger(n) && n >= 1 && n <= 999 ? n : null;
+  const campoVazio = valor === undefined || String(valor).trim() === '';
+  if (campoVazio) return 1;
+
+  const n = Number(valor); // "abc" vira NaN; "2.5" vira 2.5
+  const ehInteiro = Number.isInteger(n);
+  const dentroDoLimite = n >= QUANTIDADE_MINIMA && n <= QUANTIDADE_MAXIMA;
+  return ehInteiro && dentroDoLimite ? n : null;
 }
 
 // Volta para a página de onde veio o pedido (sem sair do nosso site).
+// O navegador informa a página anterior no cabeçalho "Referer" (sim, com esse erro de grafia
+// histórico). Só usamos o endereço se ele for do nosso próprio site (mesmo "host"),
+// para nunca redirecionar o usuário para outro site.
 function paginaAnterior(req) {
   try {
-    const url = new URL(req.get('referer'));
+    const url = new URL(req.get('referer')); // dá erro se o cabeçalho não existir
     if (url.host === req.get('host')) return url.pathname + url.search;
   } catch (e) {
-    // sem "referer": usa a página inicial
+    // sem "referer" (ou endereço inválido): cai no retorno abaixo
   }
-  return '/';
+  return '/'; // página inicial
 }
 
 // Responde a um erro: JSON para programas, aviso com foco para o navegador.
@@ -106,6 +147,20 @@ function erroDeEstoque(livro, quantidade) {
     return `Temos apenas ${unidades(livro.estoque)} de ${livro.titulo} em estoque.`;
   }
   return null;
+}
+
+// Explica por que não dá para colocar mais unidades no carrinho, considerando
+// quantas o usuário já tem lá (jaTem). Só é chamada quando a soma passa do estoque.
+function textoEstoqueNoCarrinho(livro, jaTem) {
+  const resto = livro.estoque - jaTem; // quantas ainda cabem
+
+  if (resto <= 0) {
+    return `Você já tem no carrinho todas as ${unidades(livro.estoque)} de ${livro.titulo} que temos em estoque.`;
+  }
+  if (jaTem === 0) {
+    return `Temos apenas ${unidades(livro.estoque)} de ${livro.titulo} em estoque.`;
+  }
+  return `Temos apenas ${unidades(livro.estoque)} de ${livro.titulo} em estoque e você já tem ${jaTem} no carrinho. Você pode adicionar mais ${resto}.`;
 }
 
 // ---------- Páginas ----------
@@ -128,11 +183,14 @@ app.get('/', exigirLogin, async (req, res) => {
     include: { model: ItemPedido, include: Livro },
     order: [['id', 'DESC']],
   });
+
+  // Soma o valor de todos os pedidos (reduce vai acumulando o resultado em "soma").
   const total = pedidos.reduce((soma, p) => soma + p.totalCentavos, 0);
-  const totalLivros = pedidos.reduce(
-    (soma, p) => soma + p.ItemPedidos.reduce((parcial, i) => parcial + i.quantidade, 0),
-    0
-  );
+
+  // Conta quantos livros foram comprados no total: cada pedido tem vários itens,
+  // então primeiro juntamos todos os itens numa lista só e depois somamos as quantidades.
+  const todosOsItens = pedidos.flatMap((p) => p.ItemPedidos);
+  const totalLivros = todosOsItens.reduce((soma, item) => soma + item.quantidade, 0);
 
   res.render('index', { titulo: 'Loja de livros', pagina: 'inicio', livros, pedidos, total, totalLivros, busca, nivel });
 });
@@ -200,8 +258,13 @@ app.post('/api/login', async (req, res) => {
     return res.status(401).render('login', { titulo: 'Entrar', pagina: 'login', erros, valores: { email } });
   }
 
-  // Cria uma sessão nova ao entrar (mais seguro).
-  await new Promise((ok, falha) => req.session.regenerate((e) => (e ? falha(e) : ok())));
+  // Cria uma sessão nova ao entrar (mais seguro: impede que um código de sessão
+  // obtido antes do login passe a valer para a conta logada).
+  // regenerate() usa o estilo antigo de "callback"; este Promise o transforma
+  // em algo que podemos esperar com await.
+  await new Promise((resolver, rejeitar) => {
+    req.session.regenerate((erro) => (erro ? rejeitar(erro) : resolver()));
+  });
   req.session.usuario = { id: usuario.id, nome: usuario.nome };
 
   if (querJson(req)) return res.json({ ok: true, usuario: req.session.usuario });
@@ -250,16 +313,10 @@ app.post('/api/carrinho/adicionar/:id', exigirLogin, async (req, res) => {
 
   if (livro.estoque === 0) return falhar(req, res, 409, `O livro ${livro.titulo} está esgotado.`);
   if (novaQuantidade > livro.estoque) {
-    const resto = livro.estoque - jaTem;
-    const texto =
-      resto <= 0
-        ? `Você já tem no carrinho todas as ${unidades(livro.estoque)} de ${livro.titulo} que temos em estoque.`
-        : jaTem === 0
-          ? `Temos apenas ${unidades(livro.estoque)} de ${livro.titulo} em estoque.`
-          : `Temos apenas ${unidades(livro.estoque)} de ${livro.titulo} em estoque e você já tem ${jaTem} no carrinho. Você pode adicionar mais ${resto}.`;
-    return falhar(req, res, 409, texto);
+    return falhar(req, res, 409, textoEstoqueNoCarrinho(livro, jaTem));
   }
 
+  // Se o livro já está no carrinho, só aumenta a quantidade; senão, cria a linha.
   if (item) await item.update({ quantidade: novaQuantidade });
   else await ItemCarrinho.create({ UsuarioId: usuarioId, LivroId: livro.id, quantidade });
 
@@ -329,6 +386,7 @@ async function itensDoPedido(usuarioId, fonte) {
   return { direta: false, itens: registros.map((r) => ({ livro: r.Livro, quantidade: r.quantidade })) };
 }
 
+// Soma preço x quantidade de cada item. Tudo em centavos, para evitar erros de arredondamento.
 const totalDosItens = (itens) => itens.reduce((soma, i) => soma + i.livro.precoCentavos * i.quantidade, 0);
 
 function telaFinalizar(res, status, pedido, erros, valores) {
@@ -343,6 +401,48 @@ function telaFinalizar(res, status, pedido, erros, valores) {
     erros,
     valores,
   });
+}
+
+// Confere os campos do formulário de finalização, um por um.
+// Devolve { erros, nascimento }: a lista de problemas (cada um diz qual campo e o texto
+// do aviso) e a data de nascimento já convertida para AAAA-MM-DD.
+function conferirFormulario(valores, cartaoNumero, cartaoCvv, usaCartao) {
+  const erros = [];
+  const adicionarErro = (campo, texto) => erros.push({ campo, texto });
+
+  if (valores.nomeCompleto.length < 3) adicionarErro('nomeCompleto', 'Digite seu nome completo, com pelo menos 3 letras.');
+  if (!v.cpfValido(valores.cpf)) adicionarErro('cpf', 'Digite um CPF válido, com 11 números. Exemplo: 529.982.247-25.');
+
+  const nascimento = v.lerDataNascimento(valores.nascimento);
+  if (!nascimento) adicionarErro('nascimento', 'Digite uma data de nascimento válida, no formato dia/mês/ano. Exemplo: 25/12/1990.');
+
+  if (!v.telefoneValido(valores.telefone)) adicionarErro('telefone', 'Digite um telefone com DDD, de 10 ou 11 números. Exemplo: (55) 99999-8888.');
+  if (!v.cepValido(valores.cep)) adicionarErro('cep', 'Digite um CEP com 8 números. Exemplo: 96810-000.');
+  if (valores.logradouro.length < 3) adicionarErro('logradouro', 'Digite o nome da rua ou avenida.');
+  if (!valores.numero) adicionarErro('numero', 'Digite o número do endereço, ou S/N se não houver.');
+  if (valores.bairro.length < 2) adicionarErro('bairro', 'Digite o bairro.');
+  if (valores.cidade.length < 2) adicionarErro('cidade', 'Digite a cidade.');
+  if (!v.UFS.includes(valores.uf)) adicionarErro('uf', 'Escolha o estado na lista.');
+  if (!v.FORMAS_PAGAMENTO[valores.pagamento]) adicionarErro('pagamento', 'Escolha uma forma de pagamento.');
+
+  // Os dados do cartão só são cobrados de quem escolheu pagar com cartão.
+  if (usaCartao) {
+    if (!v.cartaoValido(cartaoNumero)) adicionarErro('cartaoNumero', 'Digite um número de cartão de teste válido. Exemplo: 4111 1111 1111 1111.');
+    if (valores.cartaoNome.length < 3) adicionarErro('cartaoNome', 'Digite o nome como está no cartão.');
+    if (!v.validadeCartaoValida(valores.cartaoValidade)) adicionarErro('cartaoValidade', 'Digite a validade no formato mês/ano, de um cartão que não venceu. Exemplo: 12/30.');
+    if (!v.cvvValido(cartaoCvv)) adicionarErro('cartaoCvv', 'Digite o código de segurança, com 3 ou 4 números.');
+  }
+
+  return { erros, nascimento };
+}
+
+// Erro criado por nós para o caso "o estoque acabou durante a compra".
+// Ter uma classe própria deixa o catch mais claro do que comparar textos de mensagem.
+class SemEstoqueError extends Error {
+  constructor(titulo) {
+    super(`Sem estoque: ${titulo}`);
+    this.titulo = titulo;
+  }
 }
 
 app.get('/finalizar', exigirLogin, async (req, res) => {
@@ -363,6 +463,7 @@ app.post('/api/finalizar', exigirLogin, async (req, res) => {
   const pedido = await itensDoPedido(usuarioId, req.body);
   if (pedido.erro) return falhar(req, res, 409, pedido.erro, pedido.voltar);
 
+  // Lê um campo do formulário como texto, sem espaços nas pontas ("" se não veio nada).
   const texto = (campo) => String(req.body[campo] || '').trim();
   const valores = {
     livro: pedido.direta ? req.body.livro : '',
@@ -381,32 +482,15 @@ app.post('/api/finalizar', exigirLogin, async (req, res) => {
     pagamento: texto('pagamento'),
     cartaoNome: texto('cartaoNome'),
     cartaoValidade: texto('cartaoValidade'),
-    // o número e o código do cartão nunca voltam para a tela
+    // O número e o código do cartão ficam de fora de propósito: assim nunca
+    // são devolvidos para a tela quando o formulário volta com erros.
   };
   const cartaoNumero = texto('cartaoNumero');
   const usaCartao = valores.pagamento === 'cartao_credito' || valores.pagamento === 'cartao_debito';
 
-  const erros = [];
-  const erro = (campo, textoErro) => erros.push({ campo, texto: textoErro });
-
-  if (valores.nomeCompleto.length < 3) erro('nomeCompleto', 'Digite seu nome completo, com pelo menos 3 letras.');
-  if (!v.cpfValido(valores.cpf)) erro('cpf', 'Digite um CPF válido, com 11 números. Exemplo: 529.982.247-25.');
-  const nascimento = v.lerDataNascimento(valores.nascimento);
-  if (!nascimento) erro('nascimento', 'Digite uma data de nascimento válida, no formato dia/mês/ano. Exemplo: 25/12/1990.');
-  if (!v.telefoneValido(valores.telefone)) erro('telefone', 'Digite um telefone com DDD, de 10 ou 11 números. Exemplo: (55) 99999-8888.');
-  if (!v.cepValido(valores.cep)) erro('cep', 'Digite um CEP com 8 números. Exemplo: 96810-000.');
-  if (valores.logradouro.length < 3) erro('logradouro', 'Digite o nome da rua ou avenida.');
-  if (!valores.numero) erro('numero', 'Digite o número do endereço, ou S/N se não houver.');
-  if (valores.bairro.length < 2) erro('bairro', 'Digite o bairro.');
-  if (valores.cidade.length < 2) erro('cidade', 'Digite a cidade.');
-  if (!v.UFS.includes(valores.uf)) erro('uf', 'Escolha o estado na lista.');
-  if (!v.FORMAS_PAGAMENTO[valores.pagamento]) erro('pagamento', 'Escolha uma forma de pagamento.');
-  if (usaCartao) {
-    if (!v.cartaoValido(cartaoNumero)) erro('cartaoNumero', 'Digite um número de cartão de teste válido. Exemplo: 4111 1111 1111 1111.');
-    if (valores.cartaoNome.length < 3) erro('cartaoNome', 'Digite o nome como está no cartão.');
-    if (!v.validadeCartaoValida(valores.cartaoValidade)) erro('cartaoValidade', 'Digite a validade no formato mês/ano, de um cartão que não venceu. Exemplo: 12/30.');
-    if (!v.cvvValido(req.body.cartaoCvv)) erro('cartaoCvv', 'Digite o código de segurança, com 3 ou 4 números.');
-  }
+  // Confere cada campo; "erros" fica vazio quando está tudo certo.
+  // "nascimento" já vem no formato AAAA-MM-DD (ou null se a data for inválida).
+  const { erros, nascimento } = conferirFormulario(valores, cartaoNumero, req.body.cartaoCvv, usaCartao);
 
   if (erros.length > 0) {
     if (querJson(req)) return res.status(400).json({ ok: false, erros });
@@ -414,16 +498,21 @@ app.post('/api/finalizar', exigirLogin, async (req, res) => {
   }
 
   // Tudo ou nada: baixa o estoque e grava o pedido na mesma transação.
-  // A baixa só acontece se ainda houver estoque, mesmo que outro cliente tenha comprado agora há pouco.
+  // Se qualquer passo der erro, a transação desfaz tudo o que já tinha sido feito nela.
   let criado;
   try {
     criado = await sequelize.transaction(async (t) => {
       for (const { livro, quantidade } of pedido.itens) {
+        // Em SQL, isto vira: UPDATE Livros SET estoque = estoque - 2 WHERE id = 7 AND estoque >= 2
+        // A conta é feita pelo próprio banco (sequelize.literal) e só vale se ainda houver
+        // estoque suficiente, mesmo que outro cliente tenha comprado agora há pouco.
+        // Number() garante que só um número entra no texto SQL.
         const [alterados] = await Livro.update(
           { estoque: sequelize.literal(`estoque - ${Number(quantidade)}`) },
           { where: { id: livro.id, estoque: { [Op.gte]: quantidade } }, transaction: t }
         );
-        if (alterados === 0) throw new Error(`SEM_ESTOQUE:${livro.titulo}`);
+        // Nenhuma linha alterada = a condição "estoque >= quantidade" falhou.
+        if (alterados === 0) throw new SemEstoqueError(livro.titulo);
       }
 
       const novo = await Pedido.create(
@@ -459,17 +548,16 @@ app.post('/api/finalizar', exigirLogin, async (req, res) => {
       return novo;
     });
   } catch (e) {
-    if (String(e.message).startsWith('SEM_ESTOQUE:')) {
-      const titulo = e.message.slice('SEM_ESTOQUE:'.length);
+    if (e instanceof SemEstoqueError) {
       return falhar(
         req,
         res,
         409,
-        `Outro cliente acabou de comprar o livro ${titulo} e não temos mais estoque suficiente. Seu pedido não foi feito.`,
+        `Outro cliente acabou de comprar o livro ${e.titulo} e não temos mais estoque suficiente. Seu pedido não foi feito.`,
         pedido.direta ? '/' : '/carrinho'
       );
     }
-    throw e;
+    throw e; // outro tipo de erro: deixa o tratador de erros lá embaixo responder
   }
 
   if (querJson(req)) return res.status(201).json({ ok: true, pedido: { id: criado.id, total: criado.totalCentavos } });
@@ -486,16 +574,23 @@ app.post('/sair', (req, res) => {
 });
 
 // ---------- Erros ----------
+// Estas duas funções ficam por último de propósito: só são chamadas
+// se nenhuma rota acima respondeu.
+
+// Sem rota correspondente: página não encontrada.
 app.use((req, res) => {
   res.status(404).render('erro', { titulo: 'Página não encontrada', texto: 'Não encontramos essa página.' });
 });
 
+// Erro inesperado. O Express reconhece um tratador de erros pelos 4 parâmetros
+// (erro, req, res, next): mesmo sem usar o "next", ele precisa estar na lista.
 app.use((erro, req, res, next) => {
   console.error(erro);
   res.status(500).render('erro', { titulo: 'Algo deu errado', texto: 'Tivemos um problema. Tente de novo.' });
 });
 
 // ---------- Liga o servidor ----------
+// Primeiro prepara o banco; só depois começa a receber pedidos.
 iniciarBanco()
   .then(() => {
     app.listen(PORTA, () => console.log(`Loja no ar: http://localhost:${PORTA}`));
