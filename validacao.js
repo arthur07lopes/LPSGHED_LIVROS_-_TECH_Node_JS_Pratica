@@ -1,19 +1,12 @@
 // validacao.js
 // Funções que conferem os dados do formulário de finalização do pedido.
-// Cada uma devolve true/false. Nada aqui consulta serviços externos:
-// quando houver uma API de pagamento, ela entra por cima destas conferências.
+// Cada uma devolve true/false. Nada aqui consulta serviços externos.
+// Os dados de pagamento (cartão etc.) não são conferidos aqui: o Stripe cuida disso.
 
 const UFS = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA',
   'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO',
 ];
-
-const FORMAS_PAGAMENTO = {
-  cartao_credito: 'Cartão de crédito (fictício)',
-  cartao_debito: 'Cartão de débito (fictício)',
-  pix: 'Pix (fictício)',
-  boleto: 'Boleto (fictício)',
-};
 
 // Tira tudo que não é número: "529.982.247-25" vira "52998224725".
 // \D na expressão regular significa "qualquer caractere que não seja dígito".
@@ -79,58 +72,11 @@ function telefoneValido(telefone) {
 
 const cepValido = (cep) => somenteDigitos(cep).length === 8;
 
-// Algoritmo de Luhn: confere se o número do cartão é plausível (detecta erros de digitação).
-// Percorremos os números da DIREITA para a ESQUERDA e dobramos um sim, um não:
-//   - o último número fica como está;
-//   - o penúltimo é dobrado (se passar de 9, subtraímos 9, o que equivale a somar os dígitos
-//     do resultado: 14 -> 1 + 4 = 5 = 14 - 9);
-//   - e assim por diante, alternando.
-// No fim, a soma de tudo precisa terminar em 0 (ser múltipla de 10).
-function cartaoValido(numero) {
-  const d = somenteDigitos(numero);
-  if (d.length < 13 || d.length > 19) return false; // tamanhos possíveis de cartões
-
-  let soma = 0;
-  for (let posicao = 0; posicao < d.length; posicao++) {
-    // posição 0 = último número, posição 1 = penúltimo...
-    let n = Number(d[d.length - 1 - posicao]);
-    const deveDobrar = posicao % 2 === 1;
-    if (deveDobrar) {
-      n *= 2;
-      if (n > 9) n -= 9;
-    }
-    soma += n;
-  }
-  return soma % 10 === 0;
-}
-
-// Validade no formato MM/AA; o cartão vale até o último dia do mês indicado.
-function validadeCartaoValida(texto) {
-  const partes = /^(\d{2})\/(\d{2})$/.exec(String(texto || '').trim());
-  if (!partes) return false;
-
-  const mes = Number(partes[1]); // 1 a 12
-  const ano = 2000 + Number(partes[2]); // "30" vira 2030
-  if (mes < 1 || mes > 12) return false;
-
-  // new Date(ano, mes, 1) usa mês começando em 0 (janeiro = 0). Então, passando o número
-  // do mês "como está", obtemos o dia 1 do mês SEGUINTE. Se esse dia ainda não chegou,
-  // o cartão continua valendo durante todo o mês informado.
-  const primeiroDiaDoMesSeguinte = new Date(ano, mes, 1);
-  return primeiroDiaDoMesSeguinte > new Date();
-}
-
-const cvvValido = (cvv) => /^\d{3,4}$/.test(String(cvv || '').trim());
-
 module.exports = {
   UFS,
-  FORMAS_PAGAMENTO,
   somenteDigitos,
   cpfValido,
   lerDataNascimento,
   telefoneValido,
   cepValido,
-  cartaoValido,
-  validadeCartaoValida,
-  cvvValido,
 };

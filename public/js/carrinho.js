@@ -1,6 +1,5 @@
 // carrinho.js
 // 1) Na vitrine: "Adicionar ao carrinho" sem recarregar a página, com um diálogo de confirmação.
-// 2) Na finalização: mostra os campos do cartão só quando a forma de pagamento é cartão.
 // Sem JavaScript tudo continua funcionando: o formulário envia e a página recarrega com um aviso.
 
 const dialogo = document.getElementById('dialogo-carrinho');
@@ -65,22 +64,7 @@ if (dialogo && typeof dialogo.showModal === 'function') {
   });
 }
 
-const dadosCartao = document.getElementById('dados-cartao');
-if (dadosCartao) {
-  // <fieldset id="dados-cartao">: esconde os campos do cartão, a menos que a forma
-  // de pagamento escolhida seja cartão de crédito ou de débito.
-  const atualizarCartao = () => {
-    const escolhida = document.querySelector('input[name="pagamento"]:checked'); // null se nenhuma
-    const valor = escolhida ? escolhida.value : '';
-    const usaCartao = valor === 'cartao_credito' || valor === 'cartao_debito';
-    dadosCartao.hidden = !usaCartao;
-    dadosCartao.disabled = !usaCartao; // campos desativados não são enviados com o formulário
-  };
-  document.querySelectorAll('input[name="pagamento"]').forEach((r) => r.addEventListener('change', atualizarCartao));
-  atualizarCartao();
-}
-
-// 3) Botões de diminuir (−) e aumentar (+) ao lado de cada campo de quantidade.
+// 2) Botões de diminuir (−) e aumentar (+) ao lado de cada campo de quantidade.
 //    No carrinho, a quantidade também é salva sozinha (o botão "Atualizar" some).
 //    Quem usa o campo digitando: o envio acontece quando sai do campo ou aperta Enter.
 document.querySelectorAll('input[type="number"][name="quantidade"]').forEach((campo) => {
