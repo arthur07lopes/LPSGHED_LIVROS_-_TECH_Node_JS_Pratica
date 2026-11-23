@@ -2,6 +2,8 @@
 
 Projeto educacional de loja de livros de programação feito pelos alunos do SENAI-RS Santa Cruz Do Sul.
 
+**LPSGHED Livros Tech**, desenvolvida por Arthur Santos Lopes, Gabriel Heineck Haberkamp e Eduardo Franceschetti Borges.
+
 ## Como rodar
 
 1. Instale o Node.js (versão 20.17 ou mais nova) e o Git.

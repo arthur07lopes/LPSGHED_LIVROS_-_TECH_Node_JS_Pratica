@@ -1,7 +1,7 @@
 {
   "name": "lps_livros_tech",
   "version": "1.0.0",
-  "description": "Loja de livros tech desenvolvida por Arthur Santos Lopes e Gabriel Heineck Haberkamp.",
+  "description": "Loja de livros tech desenvolvida por Arthur Santos Lopes, Gabriel Heineck Haberkamp e Eduardo Franceschetti Borges (LPSGHED Livros Tech).",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -11,7 +11,7 @@
     "type": "git",
     "url": "git+https://github.com/arthur07lopes/LPSGH_LIVROS_-_TECH_Node_JS_Pratica.git"
   },
-  "author": "Gabriel Haberkamp, Arthur Lopes",
+  "author": "Arthur Santos Lopes, Gabriel Heineck Haberkamp, Eduardo Franceschetti Borges",
   "license": "GPL-3.0-or-later",
   "bugs": {
     "url": "https://github.com/arthur07lopes/LPSGH_LIVROS_-_TECH_Node_JS_Pratica/issues"
