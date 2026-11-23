@@ -177,13 +177,32 @@ main:focus { outline: none; }
 /* ---------- 5. Vitrine de livros ---------- */
 .grade {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+
+  /* Cria quantas colunas couberem sem forçar largura além do contêiner. */
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(100%, 14.375rem), 1fr)
+  );
+
+  width: 100%;
   gap: 1.25rem;
   margin: 0;
   padding: 0;
   list-style: none;
+  align-items: stretch;
 }
-.cartao { display: flex; flex-direction: column; padding: 1.1rem; }
+.cartao {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  padding: 1.1rem;
+  background: var(--superficie);
+  box-shadow: inset 0 3px 0 var(--neon);
+  overflow-wrap: anywhere;
+}
+.cartao > * { min-width: 0; }
+.grade > li { min-width: 0; }
 .cartao h3 { margin: 0.8rem 0 0.2rem; font-family: var(--fonte-ui); font-size: 1.3rem; line-height: 1.25; }
 .cartao p { margin: 0.3rem 0; }
 .autor { color: var(--texto-suave); }
@@ -218,6 +237,11 @@ main:focus { outline: none; }
   letter-spacing: 0.04em;
   text-transform: uppercase;
   text-decoration: none;
+  text-align: center;
+  line-height: 1.25;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  max-width: 100%;
   cursor: pointer;
   border: 2px solid transparent;
   border-radius: 0;
@@ -312,7 +336,7 @@ main:focus { outline: none; }
 }
 
 /* ---------- 12. Carrinho, estoque e finalização ---------- */
-.link-carrinho { white-space: nowrap; }
+.link-carrinho { white-space: normal; overflow-wrap: anywhere; }
 .estoque { margin: 0.3rem 0; font-weight: 600; color: var(--texto-suave); }
 .estoque-zero { color: #ffb3c1; }
 .form-livro { display: grid; gap: 0.6rem; margin-top: 0.6rem; }
@@ -328,7 +352,23 @@ main:focus { outline: none; }
   border: 2px solid var(--linha);
   border-radius: 0;
 }
-.botao-carrinho { width: 100%; background: transparent; color: var(--neon); border-color: var(--neon); }
+.botao-carrinho {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 2.8rem;
+  padding: 0.6rem 0.45rem;
+  text-align: center;
+  line-height: 1.25;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  background: transparent;
+  color: var(--neon);
+  border-color: var(--neon);
+}
 .botao-carrinho:hover { background: var(--neon); color: #04110f; }
 .form-linha { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
 .tabela-rolagem { overflow-x: auto; }
@@ -382,3 +422,162 @@ legend { padding: 0 0.4rem; font-family: var(--fonte-ui); font-size: 1.25rem; fo
 .botao-passo:hover { color: #fff; border-color: var(--neon); }
 .campo-quantidade input[type='number'], .form-linha input[type='number'] { width: 4rem; text-align: center; appearance: textfield; -moz-appearance: textfield; }
 .campo-quantidade input::-webkit-inner-spin-button, .form-linha input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+
+/* ---------- 13. Ajustes complementares de layout e responsividade ---------- */
+
+/* Impede que elementos internos imponham largura maior que o cartão. */
+.cartao,
+.cartao form,
+.form-livro,
+.form-livro > *,
+.campo-controle,
+.form-linha {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.cartao h3,
+.cartao p,
+.cartao a,
+.cartao button {
+  overflow-wrap: anywhere;
+}
+
+/* A capa acompanha a largura real do cartão. */
+.cartao .capa {
+  width: 100%;
+}
+
+.cartao .capa img {
+  max-width: 100%;
+}
+
+/* Garante que o botão de carrinho não recupere o nowrap por outra regra. */
+.cartao .link-carrinho,
+.cartao .botao-carrinho {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Quantidade e controles podem quebrar linha em cartões estreitos. */
+.campo-quantidade {
+  flex-wrap: wrap;
+}
+
+.campo-quantidade input,
+.form-linha input {
+  max-width: 100%;
+}
+
+/* Evita que tabelas largas aumentem a largura da página. */
+.tabela-rolagem {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Mantém a caixa de diálogo dentro da área visível. */
+.dialogo {
+  width: min(32rem, calc(100% - 2rem));
+  max-height: calc(100% - 2rem);
+  overflow: auto;
+}
+
+/* Telas intermediárias. */
+@media (max-width: 760px) {
+  .topo-linha {
+    gap: 0.75rem 1rem;
+  }
+
+  .busca {
+    flex: 1 1 100%;
+  }
+
+  .conta {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .grade {
+    gap: 1rem;
+  }
+
+  .painel {
+    padding: 1.1rem;
+  }
+}
+
+/* Celulares. */
+@media (max-width: 480px) {
+  html {
+    font-size: 100%;
+  }
+
+  .topo-linha {
+    padding: 0.75rem;
+  }
+
+  .logo {
+    font-size: clamp(0.58rem, 3vw, 0.8rem);
+  }
+
+  main {
+    padding: 1rem 0.75rem 2rem;
+  }
+
+  .titulo-pixel {
+    overflow-wrap: anywhere;
+  }
+
+  .titulo-secao {
+    font-size: 1.35rem;
+  }
+
+  .conta {
+    gap: 0.6rem;
+    font-size: 1rem;
+  }
+
+  .cartao {
+    padding: 0.9rem;
+  }
+
+  .dialogo {
+    padding: 1rem;
+  }
+
+  .dialogo-botoes {
+    gap: 0.6rem;
+  }
+}
+
+/* Respeita a preferência do sistema por movimento reduzido. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Corrige o valor de cor forçada para leitores/temas de alto contraste. */
+@media (forced-colors: active) {
+  .botao,
+  .botao-passo,
+  .botao-olho,
+  .botao-carrinho {
+    border: 2px solid ButtonText;
+  }
+
+  .hero,
+  .painel,
+  .cartao {
+    border: 1px solid CanvasText;
+  }
+}
