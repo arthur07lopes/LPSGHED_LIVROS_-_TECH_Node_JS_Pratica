@@ -5,7 +5,7 @@
   <h1 id="titulo-pagina" class="titulo-pixel">Finalizar pedido</h1>
 
   <div class="aviso aviso-info">
-    <p><strong>Simulação:</strong> nenhum valor será cobrado e nenhum livro será enviado. Não digite dados reais de cartão: use o cartão de teste 4111 1111 1111 1111.</p>
+    <p><strong>Ambiente de teste:</strong> ao confirmar, você será levado à página de pagamento do Stripe. Nenhum valor real é cobrado e nenhum livro será enviado. Lá, use o cartão de teste 4242 4242 4242 4242, com qualquer validade futura e qualquer código de segurança.</p>
   </div>
 
   <h2 class="titulo-secao" id="titulo-resumo">Resumo do pedido</h2>
@@ -90,34 +90,7 @@
            opcoes: ufs, valor: valores.uf || '', erros }) %>
     </fieldset>
 
-    <% const erroPagamento = erros.find((e) => e.campo === 'pagamento'); %>
-    <fieldset <%- erroPagamento ? 'aria-describedby="erro-pagamento"' : '' %>>
-      <legend>Forma de pagamento (fictícia)</legend>
-      <% if (erroPagamento) { %>
-        <p class="erro-campo" id="erro-pagamento" role="alert"><span class="so-leitor">Erro:</span> <%= erroPagamento.texto %></p>
-      <% } %>
-      <% Object.entries(formas).forEach(([chave, nome], posicao) => { %>
-        <div class="opcao">
-          <input type="radio" id="<%= posicao === 0 ? 'pagamento' : 'pagamento-' + chave %>" name="pagamento"
-                 value="<%= chave %>" <%= valores.pagamento === chave ? 'checked' : '' %> required>
-          <label for="<%= posicao === 0 ? 'pagamento' : 'pagamento-' + chave %>"><%= nome %></label>
-        </div>
-      <% }) %>
-    </fieldset>
-
-    <fieldset id="dados-cartao">
-      <legend>Dados do cartão de teste</legend>
-      <%- include('partials/campo', { id: 'cartaoNumero', rotulo: 'Número do cartão', tipo: 'text', modo: 'numeric',
-           autocomplete: 'cc-number', dica: 'Cartão de teste: 4111 1111 1111 1111', valor: '', erros }) %>
-      <%- include('partials/campo', { id: 'cartaoNome', rotulo: 'Nome como está no cartão', tipo: 'text',
-           autocomplete: 'cc-name', dica: '', valor: valores.cartaoNome || '', erros }) %>
-      <%- include('partials/campo', { id: 'cartaoValidade', rotulo: 'Validade', tipo: 'text', modo: 'numeric',
-           autocomplete: 'cc-exp', dica: 'Mês e ano com barra. Exemplo: 12/30', valor: valores.cartaoValidade || '', erros }) %>
-      <%- include('partials/campo', { id: 'cartaoCvv', rotulo: 'Código de segurança', tipo: 'text', modo: 'numeric',
-           autocomplete: 'cc-csc', dica: 'Três ou quatro números. Exemplo: 123', valor: '', erros }) %>
-    </fieldset>
-
-    <button class="botao botao-principal" type="submit">Confirmar pedido (simulação)</button>
+    <button class="botao botao-principal" type="submit">Ir para o pagamento</button>
   </form>
 </section>
 

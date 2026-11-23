@@ -18,14 +18,22 @@ Projeto educacional de loja de livros de programação feito pelos alunos do SEN
 - `/login`: entrar
 - `/`: loja de livros e tabela "Seus pedidos" (precisa estar logado)
 - `/carrinho`: carrinho de compras (salvo no banco, por usuário)
-- `/finalizar`: formulário de finalização do pedido (simulação, sem cobrança)
+- `/finalizar`: formulário de finalização do pedido (leva ao pagamento de teste do Stripe)
 
 ## Compras e estoque
 
 - Cada livro começa com 5 unidades em estoque, compartilhadas entre todos os clientes.
 - "Comprar" e "Adicionar ao carrinho" aceitam mais de uma unidade por vez.
-- O pedido só é gravado quando o formulário de finalização é enviado; só então o estoque baixa.
-- Dados pessoais e de pagamento são fictícios. Do cartão guardamos só os 4 últimos dígitos.
+- Ao enviar o formulário de finalização, o pedido fica "pendente" e o estoque é reservado.
+- O pagamento é feito na página do Stripe (modo de teste): a loja nunca vê nem guarda dados de cartão.
+- Pagou: o pedido vira "pago" e aparece em "Seus pedidos". Cancelou, expirou ou falhou: o estoque volta.
+
+## Configurar o pagamento (Stripe, modo teste)
+
+1. Copie `.env.example` para `.env` e preencha `STRIPE_SECRET_KEY` (chave `sk_test_...` do painel do Stripe).
+2. Para o Stripe avisar a loja dos pagamentos, rode `stripe listen --forward-to localhost:3000/api/webhook`
+   e cole o `whsec_...` que ele mostrar em `STRIPE_WEBHOOK_SECRET`.
+3. Cartão de teste: `4242 4242 4242 4242`, qualquer validade futura e qualquer código de segurança.
 
 ## Tecnologias
 

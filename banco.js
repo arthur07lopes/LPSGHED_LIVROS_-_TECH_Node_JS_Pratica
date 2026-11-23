@@ -46,9 +46,11 @@ const ItemCarrinho = sequelize.define(
   { tableName: 'itens_carrinho', indexes: [{ unique: true, fields: ['UsuarioId', 'LivroId'] }] }
 );
 
-// Pedido: só é criado quando o formulário de finalização é enviado.
-// Os dados pessoais e de pagamento são fictícios (simulação, sem cobrança).
-// Por segurança, do cartão guardamos apenas os 4 últimos dígitos.
+// Pedido: é criado quando o formulário de finalização é enviado, já como "pendente".
+// Só vira "pago" quando o Stripe confirma o pagamento. Os dados do cartão são digitados
+// na página do Stripe: a nossa loja nunca os vê nem os guarda.
+// status: 'pendente' (esperando pagamento), 'pago', 'cancelado' ou 'falhou'.
+// stripeSessionId: o código da sessão de pagamento no Stripe.
 const Pedido = sequelize.define(
   'Pedido',
   {
@@ -65,7 +67,9 @@ const Pedido = sequelize.define(
     cidade: DataTypes.STRING,
     uf: DataTypes.STRING,
     formaPagamento: DataTypes.STRING,
-    cartaoFinal: DataTypes.STRING,
+    cartaoFinal: DataTypes.STRING, // não é mais usado (pedidos da época da simulação)
+    status: { type: DataTypes.STRING, allowNull: false, defaultValue: 'pendente' },
+    stripeSessionId: { type: DataTypes.STRING, allowNull: true },
   },
   { tableName: 'pedidos' }
 );
@@ -178,6 +182,16 @@ async function atualizarBancoAntigo() {
     });
   }
 
+  // Pedidos criados antes do pagamento real não têm "status": eles já valiam como pagos.
+  const colunasPedido = await consulta.describeTable('pedidos');
+  if (!colunasPedido.status) {
+    await consulta.addColumn('pedidos', 'status', { type: DataTypes.STRING, allowNull: false, defaultValue: 'pago' });
+    // A partir de agora, pedido novo começa "pendente" (o padrão do modelo cuida disso).
+  }
+  if (!colunasPedido.stripeSessionId) {
+    await consulta.addColumn('pedidos', 'stripeSessionId', { type: DataTypes.STRING, allowNull: true });
+  }
+
   // A tabela antiga "Compras" guardava uma compra por linha. Se ela existir, copiamos
   // cada compra para o formato novo (um Pedido com um ItemPedido) e depois apagamos a antiga.
   const tabelas = await consulta.showAllTables();
@@ -193,6 +207,7 @@ async function atualizarBancoAntigo() {
         {
           UsuarioId: antiga.UsuarioId,
           totalCentavos: livro.precoCentavos * antiga.quantidade,
+          status: 'pago',
           createdAt: antiga.createdAt,
         },
         { transaction: transacao }
